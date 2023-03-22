@@ -4,6 +4,7 @@ library(shinythemes)
 library(dplyr)
 library(readr)
 library(ggplot2)
+library(gridExtra)
 
 folder="C:/EPTD/Modeling/IMPACT Non Mod Git/OutputFiles/Scenarios"
 
@@ -39,30 +40,53 @@ ui <- fluidPage(
     
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
-        sidebarPanel(
-            # Select type of trend to plot
-            selectInput(inputId = "indicator", label = strong("Indicator"),
-                        choices = unique(df_prep$indicator),
-                        selected = "Population"),
-            
-            sliderInput(inputId = "year", label = strong("Year"),
-                        min = min(df$yrs),
-                        value = max(df$yrs),
-                        max = max(df$yrs),
-                        step=1),
-            
-            checkboxInput("free_y", label = strong("Free Y-axis"), 
-                          value = FALSE, 
-                          width = NULL)
+    #     sidebarPanel(
+    #         # Select type of trend to plot
+    #         selectInput(inputId = "indicator", label = strong("Indicator"),
+    #                     choices = unique(df_prep$indicator),
+    #                     selected = "Population"),
+    #         
+    #         sliderInput(inputId = "year", label = strong("Year"),
+    #                     min = min(df$yrs),
+    #                     value = max(df$yrs),
+    #                     max = max(df$yrs),
+    #                     step=1),
+    #         
+    #         checkboxInput("free_y", label = strong("Free Y-axis"), 
+    #                       value = FALSE, 
+    #                       width = NULL)
+    # ),
+    sidebarPanel("sidebar panel",
+                 selectInput(inputId = "indicator", label = strong("Indicator"),
+                                                 choices = unique(df_prep$indicator),
+                                                 selected = "Population"),
+                 
+                 sliderInput(inputId = "year", label = strong("Year"),
+                                                 min = min(df$yrs),
+                                                 value = max(df$yrs),
+                                                 max = max(df$yrs),
+                                                 step=1),
+                 
+                 checkboxInput("donum1", "Make #1 plot", value = T),
+                 checkboxInput("donum2", "Make #2 plot", value = T),
+                 
+                 sliderInput("wt1","Weight 1",min=1,max=10,value=4),
+                 sliderInput("wt2","Weight 2",min=1,max=10,value=4),
+                 checkboxInput("free_y", label = strong("Free Y-axis"), 
+                                                      value = FALSE, 
+                                                      width = NULL)
     ),
     # Output: Description, lineplot, and reference
-    mainPanel(
-        plotOutput(outputId = "impact_plot", height = "1200px"),
-        # textOutput(outputId = "desc"),
-        # tags$a(href = "https://www.google.com/finance/domestic_trends", "Source: Google Domestic Trends", target = "_blank")
-        #tableOutput("DataTable")
-        )
+    # mainPanel(
+    #     plotOutput(outputId = "impact_plot", height = "1200px"),
+    #     # textOutput(outputId = "desc"),
+    #     # tags$a(href = "https://www.google.com/finance/domestic_trends", "Source: Google Domestic Trends", target = "_blank")
+    #     #tableOutput("DataTable")
+    #     ),
+    mainPanel("main panel",
+              column(4,plotOutput(outputId="plotgraph", width="500px",height="400px"))
     )
+)
 )
 
 # Define server logic required to draw a histogram
@@ -79,20 +103,60 @@ server <- function(input, output) {
     },include.rownames=FALSE)
 
         
-    output$impact_plot <- renderPlot({
-        p <- ggplot(dfx(), aes(x = dfx()$yrs, y = dfx()$value)) + 
-            theme_minimal(base_size = 12) +
-            facet_wrap(.~region) + 
-            {if(input$free_y) facet_wrap(.~region, scales = "free_y")}+
-            geom_line(group=dfx()$flag, aes(color=dfx()$flag)) +
-            geom_point(shape=1) + 
-            ylab(unique(dfx()$unit)) +
-            ggtitle(unique(dfx()$indicator)) + 
-            theme(legend.position = "bottom") + 
-            theme(axis.text.x = element_text(angle = 90))
-
-        return(p)
-    }, res = 96)
+    # output$impact_plot <- renderPlot({
+    #     p <- ggplot(dfx(), aes(x = dfx()$yrs, y = dfx()$value)) + 
+    #         theme_minimal(base_size = 12) +
+    #         facet_wrap(.~region) + 
+    #         {if(input$free_y) facet_wrap(.~region, scales = "free_y")}+
+    #         geom_line(group=dfx()$flag, aes(color=dfx()$flag)) +
+    #         geom_point(shape=1) + 
+    #         ylab(unique(dfx()$unit)) +
+    #         ggtitle(unique(dfx()$indicator)) + 
+    #         theme(legend.position = "bottom") + 
+    #         theme(axis.text.x = element_text(angle = 90))
+    # 
+    #     return(p)
+    # }, res = 96)
+    
+    p_line <-  reactive({
+        if (!input$donum1) return(NULL)
+        ggplot(dfx(), aes(x = dfx()$yrs, y = dfx()$value)) + 
+        theme_minimal(base_size = 12) +
+        facet_wrap(.~region) + 
+        {if(input$free_y) facet_wrap(.~region, scales = "free_y")}+
+        geom_line(group=dfx()$flag, aes(color=dfx()$flag)) +
+        geom_point(shape=1) + 
+        ylab(unique(dfx()$unit)) +
+        ggtitle(unique(dfx()$indicator)) + 
+        theme(legend.position = "bottom") + 
+        theme(axis.text.x = element_text(angle = 90))
+    })
+    
+    p_bar <-  reactive({
+        if (!input$donum2) return(NULL)
+        ggplot(dfx(), aes(x = dfx()$yrs, y = dfx()$value)) + 
+        theme_minimal(base_size = 12) +
+        facet_wrap(.~region) + 
+        {if(input$free_y) facet_wrap(.~region, scales = "free_y")}+
+        geom_line(group=dfx()$flag, aes(color=dfx()$flag)) +
+        geom_point(shape=1) + 
+        ylab(unique(dfx()$unit)) +
+        ggtitle(unique(dfx()$indicator)) + 
+        theme(legend.position = "bottom") + 
+        theme(axis.text.x = element_text(angle = 90))
+    })
+    
+    output$plotgraph = renderPlot({
+        ptlist <- list(p_line(),p_bar())
+        wtlist <- c(input$wt1,input$wt2)
+        # remove the null plots from ptlist and wtlist
+        to_delete <- !sapply(ptlist,is.null)
+        ptlist <- ptlist[to_delete] 
+        wtlist <- wtlist[to_delete]
+        if (length(ptlist)==0) return(NULL)
+        
+        grid.arrange(grobs=ptlist,widths=wtlist,ncol=length(ptlist))
+    })
 }
 
 # Run the application 
