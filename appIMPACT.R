@@ -84,7 +84,7 @@ ui <- fluidPage(
     #     #tableOutput("DataTable")
     #     ),
     mainPanel("main panel",
-              column(4,plotOutput(outputId="plotgraph", width="900px",height="900px"))
+              column(4,plotOutput(outputId="plotgraph", width="1200px",height="900px"))
     )
 )
 )
