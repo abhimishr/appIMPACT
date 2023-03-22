@@ -56,7 +56,7 @@ ui <- fluidPage(
     #                       value = FALSE, 
     #                       width = NULL)
     # ),
-    sidebarPanel("sidebar panel",
+    sidebarPanel(
                  selectInput(inputId = "indicator", label = strong("Indicator"),
                                                  choices = unique(df_prep$indicator),
                                                  selected = "Population"),
@@ -67,11 +67,11 @@ ui <- fluidPage(
                                                  max = max(df$yrs),
                                                  step=1),
                  
-                 checkboxInput("donum1", "Make #1 plot", value = T),
-                 checkboxInput("donum2", "Make #2 plot", value = T),
+                 checkboxInput("donum1", "Line plot", value = T),
+                 checkboxInput("donum2", "Bar plot", value = T),
                  
-                 sliderInput("wt1","Weight 1",min=1,max=10,value=4),
-                 sliderInput("wt2","Weight 2",min=1,max=10,value=4),
+                 sliderInput("wt1","Lineplot Weight",min=1,max=10,value=4),
+                 sliderInput("wt2","Barplot weight",min=1,max=10,value=4),
                  checkboxInput("free_y", label = strong("Free Y-axis"), 
                                                       value = FALSE, 
                                                       width = NULL)
