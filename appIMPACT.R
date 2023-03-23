@@ -30,6 +30,8 @@ for(file_vector in paste0(folder,"/",choice)){
     df_prep <- rbind(df_prep,df)
 }
 
+df_prep$yrs <- as.factor(as.character(df_prep$yrs))
+
 library(shiny)
 
 # Define UI for application that draws a histogram
@@ -40,42 +42,30 @@ ui <- fluidPage(
     
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
-    #     sidebarPanel(
-    #         # Select type of trend to plot
-    #         selectInput(inputId = "indicator", label = strong("Indicator"),
-    #                     choices = unique(df_prep$indicator),
-    #                     selected = "Population"),
-    #         
-    #         sliderInput(inputId = "year", label = strong("Year"),
-    #                     min = min(df$yrs),
-    #                     value = max(df$yrs),
-    #                     max = max(df$yrs),
-    #                     step=1),
-    #         
-    #         checkboxInput("free_y", label = strong("Free Y-axis"), 
-    #                       value = FALSE, 
-    #                       width = NULL)
-    # ),
-    sidebarPanel(
+
+        sidebarPanel(
                  selectInput(inputId = "indicator", label = strong("Indicator"),
                                                  choices = unique(df_prep$indicator),
                                                  selected = "Population"),
                  
                  sliderInput(inputId = "year", label = strong("Year"),
                                                  min = min(df$yrs),
-                                                 value = max(df$yrs),
+                                                 value = c(min(df$yrs),max(df$yrs)),
                                                  max = max(df$yrs),
-                                                 step=1),
+                                                 step=1,sep = ""),
                  
                  checkboxInput("donum1", "Line plot", value = T),
                  checkboxInput("donum2", "Bar plot", value = T),
                  
-                 sliderInput("wt1","Lineplot Weight",min=1,max=10,value=4),
-                 sliderInput("wt2","Barplot weight",min=1,max=10,value=4),
+                 sliderInput("wt1","Lineplot Weight",min=1,max=3,value=3),
+                 sliderInput("wt2","Barplot weight",min=1,max=3,value=3),
                  checkboxInput("free_y", label = strong("Free Y-axis"), 
                                                       value = FALSE, 
-                                                      width = NULL)
-    ),
+                                                      width = NULL),
+                 
+                 width=3
+                 ),
+
     # Output: Description, lineplot, and reference
     # mainPanel(
     #     plotOutput(outputId = "impact_plot", height = "1200px"),
@@ -83,67 +73,48 @@ ui <- fluidPage(
     #     # tags$a(href = "https://www.google.com/finance/domestic_trends", "Source: Google Domestic Trends", target = "_blank")
     #     #tableOutput("DataTable")
     #     ),
-    mainPanel("main panel",
-              column(4,plotOutput(outputId="plotgraph", width="1200px",height="900px"))
+    
+    mainPanel(plotOutput(outputId="plotgraph", width="1400px",height="900px"))
     )
-)
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     
     dfx <- reactive({
-        df_prep[df_prep$indicator == input$indicator,
-        ]
+        df_prep[df_prep$indicator == input$indicator,]
     })
-    
-    output$DataTable <- renderTable({
-        dt <- df_prep[df_prep$indicator == input$indicator,]
-        dt
-    },include.rownames=FALSE)
 
-        
-    # output$impact_plot <- renderPlot({
-    #     p <- ggplot(dfx(), aes(x = dfx()$yrs, y = dfx()$value)) + 
-    #         theme_minimal(base_size = 12) +
-    #         facet_wrap(.~region) + 
-    #         {if(input$free_y) facet_wrap(.~region, scales = "free_y")}+
-    #         geom_line(group=dfx()$flag, aes(color=dfx()$flag)) +
-    #         geom_point(shape=1) + 
-    #         ylab(unique(dfx()$unit)) +
-    #         ggtitle(unique(dfx()$indicator)) + 
-    #         theme(legend.position = "bottom") + 
-    #         theme(axis.text.x = element_text(angle = 90))
-    # 
-    #     return(p)
-    # }, res = 96)
     
     p_line <-  reactive({
         if (!input$donum1) return(NULL)
         ggplot(dfx(), aes(x = dfx()$yrs, y = dfx()$value)) + 
-        theme_minimal(base_size = 12) +
-        facet_wrap(.~region) + 
-        {if(input$free_y) facet_wrap(.~region, scales = "free_y")}+
-        geom_line(group=dfx()$flag, aes(color=dfx()$flag)) +
-        geom_point(shape=1) + 
-        ylab(unique(dfx()$unit)) +
-        ggtitle(unique(dfx()$indicator)) + 
-        theme(legend.position = "bottom") + 
-        theme(axis.text.x = element_text(angle = 90))
+            theme_minimal(base_size = 15) +
+            facet_wrap(.~region) + 
+            {if(input$free_y) facet_wrap(.~region, scales = "free_y")}+
+            geom_line(group=dfx()$flag, aes(color=dfx()$flag)) +
+            geom_point(shape=1) + 
+            ylab(unique(dfx()$unit)) +
+            xlab("Years") +
+            ggtitle(unique(dfx()$indicator)) + 
+            theme(legend.position = "bottom",legend.direction = "vertical") + 
+            theme(axis.text.x = element_text(angle = 90)) +
+            guides(color=guide_legend(title="IMPACT Run")) 
     })
     
     p_bar <-  reactive({
         if (!input$donum2) return(NULL)
         ggplot(dfx(), aes(x = dfx()$yrs, y = dfx()$value)) + 
-        theme_minimal(base_size = 12) +
-        facet_wrap(.~region) + 
-        {if(input$free_y) facet_wrap(.~region, scales = "free_y")}+
-        geom_line(group=dfx()$flag, aes(color=dfx()$flag)) +
-        geom_point(shape=1) + 
-        ylab(unique(dfx()$unit)) +
-        ggtitle(unique(dfx()$indicator)) + 
-        theme(legend.position = "bottom") + 
-        theme(axis.text.x = element_text(angle = 90))
+            theme_minimal(base_size = 15) +
+                facet_wrap(.~flag) + 
+            #    {if(free_y) facet_wrap(.~region, scales = "free_y")}+
+            geom_area(position='stack',aes(fill=dfx()$region,group=dfx()$region),color="black") +
+            ylab(unique(dfx()$unit)) +
+            xlab("Years") +
+            ggtitle(unique(dfx()$indicator)) + 
+            theme(legend.position = "bottom") + 
+            theme(axis.text.x = element_text(angle = 90)) +
+            guides(fill=guide_legend(title="Regions")) 
     })
     
     output$plotgraph = renderPlot({
