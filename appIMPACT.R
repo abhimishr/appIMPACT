@@ -128,7 +128,9 @@ server <- function(input, output) {
             geom_point(shape=1) + 
             ylab(unique(dfx()$unit)) +
             xlab("Years") +
-            ggtitle(unique(dfx()$indicator)) + 
+            ggtitle(unique(dfx()$indicator)) +
+            {if(input$line_plot_type == "Relative") ggtitle(paste0(unique(dfx()$indicator), " (change)"))} +
+            {if(input$line_plot_type == "Index") ggtitle(paste0(unique(dfx()$indicator), " (index)"))} +
             theme(legend.position = "bottom",legend.direction = "vertical") + 
             theme(axis.text.x = element_text(angle = 90)) +
             guides(color=guide_legend(title="IMPACT Run")) 
